@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Read from a queue into a file in a none destructive way",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish": "git push origin --tags && git push origin",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish"
   },
   "bin": {
     "amqp-read": "./bin/amqp-read"
