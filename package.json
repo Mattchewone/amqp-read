@@ -1,6 +1,6 @@
 {
   "name": "amqp-read",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Read from a queue into a file in a none destructive way",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
