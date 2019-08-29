@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+
+const program = require('commander')
+const amqplib = require('amqplib')
+const fs = require('fs')
+
+program
+  .option('-u, --uri <uri>', 'the url')
+  .option('-c, --count <count>', 'the message count')
+  .option('-e, --export <export>', 'the file')
+  .option('-q, --queue <queue>', 'the queue')
+  .parse(process.argv)
+
+console.log(`
+Queue: ${program.queue}
+File: ${program.export}
+Count: ${program.count ? program.count : 'Not set'}
+`)
+
+if (program.uri && program.queue && program.export) {
+  amqplib.connect(program.uri)
+    .then(conn => {
+      let counter = 0
+      return conn.createChannel().then(async ch => {
+        process.once('SIGINT', function() { conn.close() })
+        // Get the information about the queue so we can fallback to current message count
+        const info = await ch.assertQueue(program.queue)
+        // Create the message count so we can end when we have hit the max or the message count
+        const count = parseInt(program.count || info.messageCount)
+
+        // Read the messages from the queue
+        ch.consume(program.queue, async msg => {
+          try {
+            let message = `Message: ${msg.content.toString()}`
+            if (msg.properties.headers["x-death"]) {
+              message = `${message}
+${msg.properties.headers["x-death"] ? `Queue: ${msg.properties.headers["x-death"][0].queue}` : '' }
+${msg.properties.headers["x-death"] ? `Exchange: ${msg.properties.headers["x-death"][0].exchange}` : '' }
+`
+            }
+            fs.appendFileSync(program.export, message);
+          } catch (err) {
+            /* Handle the error */
+            console.error(`Failed to appendFile: ${err.message}`)
+          }
+          // Requeue so we are not destructive
+          ch.nack(msg, false, true)
+          // Increment the counter
+          ++counter
+          // Stop reading and close the connection once we have "drained" the current queue
+          if (count === counter) {
+            conn.close()
+            console.log(`Read: "${counter}" items`)
+            process.exit()
+          }
+        })
+      })
+    })
+    .catch(error => {
+      console.error(`Failed to connect: ${error.message}`)
+      process.exit(1)
+    })
+} else {
+  console.error('No URI / Queue / File given!')
+  process.exit(1)
+}

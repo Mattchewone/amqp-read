@@ -1,0 +1,21 @@
+{
+  "name": "amqp-read",
+  "version": "1.0.0",
+  "description": "Read from a queue into a file in a none destructive way",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "amqp-read": "./bin/amqp-read"
+  },
+  "keywords": [],
+  "author": "Matt Chaffe <matt@mattchaffe.uk>",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.5.5",
+    "commander": "^3.0.0"
+  },
+  "engines": {
+    "node": ">= 8"
+  }
+}
